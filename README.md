@@ -1,8 +1,10 @@
-# test-spark (metabench)
+# Thesis preparation project
+This repo contains a setup for testing runtime of different phases, when running two consecutive Spark jobs. The test is intended to establish, how dominant the gap is for fetching manifest files from remote S3 storage. 
+
+## test-spark (metabench)
 
 How much of a whole Spark job, from `spark-submit` to exit, goes to fetching Iceberg
-manifests from S3? Every job is a new JVM, so nothing job 1 fetched helps job 2. If that
-share is negligible, a shared metadata cache proxy has little to gain.
+manifests from S3? Every job is a new JVM, so nothing job 1 fetched helps job 2.
 
 Each job runs one query, once, cold, and records:
 
