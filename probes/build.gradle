@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+}
+
+group = 'thesis.metabench'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+// Same version as bin/download_jars.sh. Only needed to compile: at runtime the classes
+// come from the iceberg-spark-runtime jar.
+def icebergVersion = '1.10.1'
+
+dependencies {
+    compileOnly "org.apache.iceberg:iceberg-core:${icebergVersion}"
+
+    testImplementation "org.apache.iceberg:iceberg-core:${icebergVersion}"
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17   // Spark 4.0's minimum Java version
+}
+
+// Write the jar next to the Iceberg jars, where bin/submit.sh picks it up.
+tasks.named('jar') {
+    archiveFileName = 'metabench-probes.jar'
+    destinationDirectory = file("$rootDir/../jars")
+}

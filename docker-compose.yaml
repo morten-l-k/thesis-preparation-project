@@ -1,0 +1,27 @@
+# Iceberg REST catalog for the experiment. Spark runs on the host and
+# reaches it on localhost:8181. Table data and metadata live in S3.
+#
+# Run from the project root; docker compose reads .env there automatically:
+#   start: docker compose up -d
+#   stop:  docker compose down   (the catalog DB survives in the volume)
+services:
+  rest:
+    image: apache/iceberg-rest-fixture:1.10.1   # same Iceberg version as bin/download_jars.sh
+    container_name: ${COMPOSE_PROJECT_NAME:-metabench}-rest
+    ports:
+      - "${REST_PORT:-8181}:8181"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?set AWS_ACCESS_KEY_ID in .env}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:?set AWS_SECRET_ACCESS_KEY in .env}
+      - AWS_REGION=${AWS_REGION:?set AWS_REGION in .env}
+      # New tables go under their own prefix, apart from anything else in the bucket.
+      - CATALOG_WAREHOUSE=s3://${S3_BUCKET_NAME:?set S3_BUCKET_NAME in .env}/${S3_WAREHOUSE_PREFIX:-test-spark}/
+      - CATALOG_IO__IMPL=org.apache.iceberg.aws.s3.S3FileIO
+      # The image's default keeps the SQLite DB in /tmp, which is lost with the container.
+      - CATALOG_URI=jdbc:sqlite:/home/iceberg/iceberg_catalog.db
+    volumes:
+      # Mounted over the iceberg user's home, so the volume is writable by that user.
+      - rest-catalog:/home/iceberg
+
+volumes:
+  rest-catalog:
